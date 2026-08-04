@@ -44,14 +44,6 @@ const ClienteSchema = new Schema(
   },
 );
 
-// Propiedad virtual para obtener el nombre completo
-ClienteSchema.virtual('nombreCompleto').get(function () {
-  return `${this.nombre} ${this.apellido}`;
-});
 
-// Equivalente a __str__ en Django
-ClienteSchema.methods.obtenerResumen = function () {
-  return `${this._id} - ${this.nombre} ${this.apellido}`;
-};
 
 module.exports = mongoose.model('Cliente', ClienteSchema);
