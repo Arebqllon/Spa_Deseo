@@ -34,13 +34,7 @@ const ClienteSchema = new Schema(
       maxlength: [20, 'El teléfono no puede exceder los 20 caracteres.'],
     },
 
-    // Campo específico para preferencias/sugerencias de esmaltes
-    colorPiel: {
-      type: String,
-      trim: true,
-      maxlength: [100, 'El color_piel no puede exceder los 100 caracteres.'],
-      default: 'No especificado',
-    },
+  
   },
 );
 
