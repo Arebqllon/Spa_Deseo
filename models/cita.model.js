@@ -33,10 +33,15 @@ const CitaSchema = new Schema(
     },
 
     // Fecha y hora de inicio de la cita unificadas en un solo objeto Date
-    fechaHora: {
+    fecha: {
       type: Date,
-      required: [true, 'La fecha y hora de la cita son obligatorias.'],
-      index: true, // Facilita la búsqueda de citas agendadas en rangos de tiempo
+      required: [true, 'La fecha de la cita es obligatoria.']
+    },
+
+    hora: {
+      type: String,
+      required: [true, 'La hora de la cita es obligatoria.'],
+      match: /^([01]\d|2[0-3]):[0-5]\d$/
     },
 
     // Monto total a pagar por la cita
