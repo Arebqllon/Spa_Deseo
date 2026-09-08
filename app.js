@@ -45,14 +45,20 @@ app.use(morgan('dev'));
 
 
 // ===============================
-// RUTAS
+// RUTAS API
 // ===============================
 
 const usuarioRoutes = require('./routes/usuario.routes');
+const citaRoutes = require('./routes/cita.routes');
 
 app.use(
     '/api/usuarios',
     usuarioRoutes
+);
+
+app.use(
+    '/api/citas',
+    citaRoutes
 );
 
 
@@ -76,6 +82,10 @@ app.get('/login', (req, res) => {
 
 app.get('/registro', (req, res) => {
     res.render('registro');
+});
+
+app.get('/dashboard', (req, res) => {
+    res.render('dashboard');
 });
 
 // ===============================

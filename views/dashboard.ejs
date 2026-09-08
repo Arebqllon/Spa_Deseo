@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Spa Deseo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 30px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .btn-logout {
+            background: #e53935;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #c62828;
+        }
+
+        /* NAVEGACIÓN POR PESTAÑAS */
+        .navegacion {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-tab {
+            padding: 12px 20px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #555;
+            transition: 0.3s;
+        }
+
+        .btn-tab:hover {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+
+        .btn-tab.activo {
+            background: #c2185b;
+            color: white;
+            border-color: #c2185b;
+        }
+
+        /* CONTENIDO DE PESTAÑAS */
+        .contenido {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .seccion-tab {
+            display: none;
+        }
+
+        .seccion-tab.activa {
+            display: block;
+        }
+
+        /* FORMULARIOS Y LISTAS */
+        .campo {
+            margin-bottom: 15px;
+        }
+
+        .campo label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #444;
+        }
+
+        .campo input, .campo select {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .btn-guardar {
+            background: #c2185b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-guardar:hover {
+            background: #ad1457;
+        }
+
+        ul {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        li {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .mensaje-res {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h2>Panel de Control - Spa Deseo</h2>
+        <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+    </div>
+
+    <!-- BOTONES DE PESTAÑAS -->
+    <div class="navegacion">
+        <button class="btn-tab activo" onclick="cambiarPestana('mis-citas')">Mis Citas</button>
+        <button class="btn-tab" onclick="cambiarPestana('agendar')">Agendar Cita</button>
+        <button class="btn-tab" onclick="cambiarPestana('perfil')">Editar Perfil</button>
+    </div>
+
+    <div class="contenido">
+
+        <!-- 1. SECCIÓN: MIS CITAS -->
+        <section id="sec-mis-citas" class="seccion-tab activa">
+            <h3>Citas Programadas</h3>
+            <ul id="listaCitas">
+                <li>Cargando citas...</li>
+            </ul>
+        </section>
+
+        <!-- 2. SECCIÓN: AGENDAR CITA -->
+        <section id="sec-agendar" class="seccion-tab">
+            <h3>Agendar Nueva Cita</h3>
+            <form id="formAgendar" style="margin-top: 15px;">
+                <div class="campo">
+                    <label for="servicio">Servicio</label>
+                    <select id="servicio" required>
+                        <option value="">Selecciona un servicio</option>
+                        <option value="Manicura">Manicura</option>
+                        <option value="Pedicura">Pedicura</option>
+                        <option value="Masaje Relajante">Masaje Relajante</option>
+                        <option value="Limpieza Facial">Limpieza Facial</option>
+                    </select>
+                </div>
+
+                <!-- CAMPO MANICURISTA/ESPECIALISTA -->
+                <div class="campo">
+                    <label for="manicurista">Manicurista / Especialista</label>
+                    <select id="manicurista" required>
+                        <option value="">Selecciona una manicurista</option>
+                        <option value="Valeria Gómez">Valeria Gómez</option>
+                        <option value="Camila Restrepo">Camila Restrepo</option>
+                        <option value="Mariana López">Mariana López</option>
+                        <option value="Cualquiera disponible">Cualquiera disponible</option>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="fecha">Fecha y Hora</label>
+                    <input type="datetime-local" id="fecha" required>
+                </div>
+
+                <button type="submit" class="btn-guardar">Confirmar Cita</button>
+            </form>
+            <div id="msgAgendar" class="mensaje-res"></div>
+        </section>
+
+        <!-- 3. SECCIÓN: EDITAR PERFIL -->
+        <section id="sec-perfil" class="seccion-tab">
+            <h3>Editar Perfil</h3>
+            <form id="formPerfil" style="margin-top: 15px;">
+                <div class="campo">
+                    <label for="nombrePerfil">Nombre completo</label>
+                    <input type="text" id="nombrePerfil" required>
+                </div>
+
+                <div class="campo">
+                    <label for="correoPerfil">Correo electrónico</label>
+                    <input type="email" id="correoPerfil" required>
+                </div>
+
+                <button type="submit" class="btn-guardar">Actualizar Datos</button>
+            </form>
+            <div id="msgPerfil" class="mensaje-res"></div>
+        </section>
+
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!token || token === 'undefined' || token === 'null') {
+                cerrarSesion();
+                return;
+            }
+
+            cargarCitas();
+            cargarDatosPerfil();
+        });
+
+        // CAMBIAR PESTAÑAS
+        function cambiarPestana(pestana) {
+            document.querySelectorAll('.seccion-tab').forEach(sec => sec.classList.remove('activa'));
+            document.querySelectorAll('.btn-tab').forEach(btn => btn.classList.remove('activo'));
+
+            if (pestana === 'mis-citas') {
+                document.getElementById('sec-mis-citas').classList.add('activa');
+                event.target.classList.add('activo');
+                cargarCitas();
+            } else if (pestana === 'agendar') {
+                document.getElementById('sec-agendar').classList.add('activa');
+                event.target.classList.add('activo');
+            } else if (pestana === 'perfil') {
+                document.getElementById('sec-perfil').classList.add('activa');
+                event.target.classList.add('activo');
+            }
+        }
+
+        // 1. CARGAR CITAS
+        async function cargarCitas() {
+            const lista = document.getElementById('listaCitas');
+
+            try {
+                const respuesta = await fetch('/api/citas/consultar', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (respuesta.status === 401 || respuesta.status === 403) {
+                    cerrarSesion();
+                    return;
+                }
+
+                const citas = await respuesta.json();
+                lista.innerHTML = '';
+
+                if (!Array.isArray(citas) || citas.length === 0) {
+                    lista.innerHTML = '<li>No tienes citas programadas.</li>';
+                    return;
+                }
+
+                citas.forEach(cita => {
+                    const li = document.createElement('li');
+                    const manicuristaTexto = cita.manicurista ? ` | Atiende: ${cita.manicurista}` : '';
+                    li.textContent = `📌 Servicio: ${cita.servicio || 'General'}${manicuristaTexto} | Fecha: ${new Date(cita.fecha).toLocaleString()}`;
+                    lista.appendChild(li);
+                });
+
+            } catch (error) {
+                lista.innerHTML = '<li>Error al obtener la lista de citas.</li>';
+            }
+        }
+
+        // 2. AGENDAR CITA
+        document.getElementById('formAgendar').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const servicio = document.getElementById('servicio').value;
+            const manicurista = document.getElementById('manicurista').value;
+            const fecha = document.getElementById('fecha').value;
+            const msg = document.getElementById('msgAgendar');
+
+            try {
+                const respuesta = await fetch('/api/citas/agendar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ servicio, manicurista, fecha })
+                });
+
+                const res = await respuesta.json();
+                if (respuesta.ok) {
+                    msg.textContent = '¡Cita agendada con éxito!';
+                    document.getElementById('formAgendar').reset();
+                } else {
+                    msg.textContent = res.mensaje || 'Error al agendar la cita.';
+                }
+            } catch (err) {
+                msg.textContent = 'Error de conexión al servidor.';
+            }
+        });
+
+        // 3. EDITAR PERFIL
+        function cargarDatosPerfil() {
+            const usuarioStr = localStorage.getItem('usuario');
+            if (usuarioStr) {
+                try {
+                    const usuario = JSON.parse(usuarioStr);
+                    document.getElementById('nombrePerfil').value = usuario.nombre || '';
+                    document.getElementById('correoPerfil').value = usuario.correo || '';
+                } catch (e) {}
+            }
+        }
+
+        document.getElementById('formPerfil').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('nombrePerfil').value;
+            const correo = document.getElementById('correoPerfil').value;
+            const msg = document.getElementById('msgPerfil');
+
+            try {
+                const respuesta = await fetch('/api/usuarios/perfil', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ nombre, correo })
+                });
+
+                const res = await respuesta.json();
+                if (respuesta.ok) {
+                    msg.textContent = 'Perfil actualizado correctamente.';
+                    localStorage.setItem('usuario', JSON.stringify({ nombre, correo }));
+                } else {
+                    msg.textContent = res.mensaje || 'Error al actualizar perfil.';
+                }
+            } catch (err) {
+                msg.textContent = 'Error de conexión al servidor.';
+            }
+        });
+
+        // LOGOUT
+        document.getElementById('btnLogout').addEventListener('click', cerrarSesion);
+
+        function cerrarSesion() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuario');
+            window.location.href = '/login';
+        }
+    </script>
+</body>
+
+</html>

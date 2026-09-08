@@ -2,14 +2,12 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 /**
- * ESQUEMA DE CITA (Fecha y Hora Unificadas)
- * 
- * Gestiona el agendamiento de citas asociando el cliente, la manicurista y los servicios.
- * Representa la entidad central del módulo de agenda dentro del sistema.
+ * ESQUEMA DE CITA
+ * Gestiona el agendamiento de citas asociando el cliente, manicurista y servicio.
  */
 const CitaSchema = new Schema(
   {
-    // Referencia obligatoria al Cliente que solicita la cita
+    // Referencia al Cliente (o Usuario que inicia sesión)
     clienteId: {
       type: Schema.Types.ObjectId,
       ref: 'Cliente',
@@ -17,7 +15,7 @@ const CitaSchema = new Schema(
       index: true,
     },
 
-    // Referencia obligatoria a la Manicurista asignada
+    // Referencia a la Manicurista asignada
     manicuristaId: {
       type: Schema.Types.ObjectId,
       ref: 'Manicurista',
@@ -32,16 +30,17 @@ const CitaSchema = new Schema(
       required: [true, 'El ID del servicio es obligatorio.'],
     },
 
-    // Fecha y hora de inicio de la cita unificadas en un solo objeto Date
+    // Fecha de la cita (YYYY-MM-DD)
     fecha: {
       type: Date,
-      required: [true, 'La fecha de la cita es obligatoria.']
+      required: [true, 'La fecha de la cita es obligatoria.'],
     },
 
+    // Hora de la cita en formato HH:mm (24 horas)
     hora: {
       type: String,
       required: [true, 'La hora de la cita es obligatoria.'],
-      match: /^([01]\d|2[0-3]):[0-5]\d$/
+      match: [/^([01]\d|2[0-3]):[0-5]\d$/, 'El formato de hora debe ser HH:mm.'],
     },
 
     // Monto total a pagar por la cita
@@ -60,12 +59,18 @@ const CitaSchema = new Schema(
       },
       default: 'Pendiente',
     },
+
+    // Notas opcionales para la cita
+    notas: {
+      type: String,
+      trim: true,
+      default: '',
+    },
   },
-
+  {
+    // Genera automáticamente createdAt y updatedAt
+    timestamps: true,
+  }
 );
-
-
-
-
 
 module.exports = mongoose.model('Cita', CitaSchema);
