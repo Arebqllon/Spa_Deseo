@@ -1,4 +1,5 @@
 const Usuario = require('../models/usuarios.model');
+const Cliente = require('../models/cliente.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const enviarCorreoBienvenida = require('../services/email.service');
@@ -25,9 +26,11 @@ exports.registrar = async (req, res) => {
     try {
 
         const {
+            nombre,
+            apellido,
+            telefono,
             correo,
-            password,
-            rol
+            password
         } = req.body;
 
 
@@ -35,12 +38,36 @@ exports.registrar = async (req, res) => {
         // VALIDAR CAMPOS OBLIGATORIOS
         // =====================================================
 
-        if (!correo || !password || !rol) {
+        if (!nombre || !apellido || !telefono || !correo || !password) {
 
             return res.status(400).json({
-                mensaje: 'El correo, la contraseña y el rol son obligatorios.'
+                mensaje: 'Nombre, apellido, teléfono, correo y contraseña son obligatorios.'
             });
 
+        }
+
+        if (!/^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]{3,100}$/.test(nombre.trim())) {
+            return res.status(400).json({
+                mensaje: 'El nombre solo debe contener letras y tener entre 3 y 100 caracteres.'
+            });
+        }
+
+        if (!/^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]{3,100}$/.test(apellido.trim())) {
+            return res.status(400).json({
+                mensaje: 'El apellido solo debe contener letras y tener entre 3 y 100 caracteres.'
+            });
+        }
+
+        if (!/^\d{7,20}$/.test(telefono.trim())) {
+            return res.status(400).json({
+                mensaje: 'El teléfono debe contener entre 7 y 20 números.'
+            });
+        }
+
+        if (password.length < 8 || password.length > 20 || !/(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/.test(password)) {
+            return res.status(400).json({
+                mensaje: 'La contraseña debe tener entre 8 y 20 caracteres, una mayúscula, una minúscula y un número.'
+            });
         }
 
 
@@ -51,26 +78,6 @@ exports.registrar = async (req, res) => {
         const correoNormalizado = correo
             .trim()
             .toLowerCase();
-
-
-        // =====================================================
-        // VALIDAR ROL
-        // =====================================================
-
-        const rolesPermitidos = [
-            'Cliente',
-            'Manicurista',
-            'Administrador'
-        ];
-
-
-        if (!rolesPermitidos.includes(rol)) {
-
-            return res.status(400).json({
-                mensaje: 'El rol enviado no es válido.'
-            });
-
-        }
 
 
         // =====================================================
@@ -111,7 +118,7 @@ exports.registrar = async (req, res) => {
 
             password: passwordEncriptada,
 
-            rol: rol
+            rol: 'Cliente'
 
         });
 
@@ -121,6 +128,19 @@ exports.registrar = async (req, res) => {
         // =====================================================
 
         await usuarioNuevo.save();
+
+        try {
+            await Cliente.create({
+                usuarioId: usuarioNuevo._id,
+                nombre: nombre.trim(),
+                apellido: apellido.trim(),
+                correo: correoNormalizado,
+                telefono: telefono.trim()
+            });
+        } catch (errorCliente) {
+            await Usuario.deleteOne({ _id: usuarioNuevo._id });
+            throw errorCliente;
+        }
 
 
         // =====================================================
@@ -135,7 +155,7 @@ exports.registrar = async (req, res) => {
 
             await enviarCorreoBienvenida(
                 correoNormalizado,
-                rol
+                'Cliente'
             );
 
             console.log(

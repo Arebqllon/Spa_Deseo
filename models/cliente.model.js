@@ -27,6 +27,14 @@ const ClienteSchema = new Schema(
       maxlength: [100, 'El apellido no puede exceder los 100 caracteres.'],
     },
 
+    correo: {
+      type: String,
+      required: [true, 'El correo es obligatorio.'],
+      trim: true,
+      lowercase: true,
+      match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    },
+
     telefono: {
       type: String,
       required: [true, 'El teléfono es obligatorio.'],
