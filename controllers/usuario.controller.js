@@ -3,6 +3,7 @@ const Cliente = require('../models/cliente.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const enviarCorreoBienvenida = require('../services/email.service');
+const logger = require('../utils/logger');
 
 
 /**
@@ -128,6 +129,7 @@ exports.registrar = async (req, res) => {
         // =====================================================
 
         await usuarioNuevo.save();
+        logger.info(`Usuario registrado: ${correoNormalizado} - Rol: Cliente`);
 
         try {
             await Cliente.create({
@@ -158,13 +160,13 @@ exports.registrar = async (req, res) => {
                 'Cliente'
             );
 
-            console.log(
+            logger.info(
                 `Correo de bienvenida enviado a ${correoNormalizado}`
             );
 
         } catch (errorCorreo) {
 
-            console.error(
+            logger.error(
                 'No se pudo enviar el correo de bienvenida:',
                 errorCorreo.message
             );
@@ -189,9 +191,8 @@ exports.registrar = async (req, res) => {
 
     } catch (error) {
 
-        console.error(
-            'Error registrando usuario:',
-            error
+        logger.error(
+            `Error registrando usuario: ${error.message}`
         );
 
 
@@ -272,11 +273,12 @@ exports.login = async (req, res) => {
 
         if (!usuario) {
 
+            logger.warn(
+                `Intento de login fallido: ${correoNormalizado}`
+            );
+
             return res.status(401).json({
-
-                mensaje:
-                    'Correo o contraseña incorrectos.'
-
+                mensaje: 'Correo o contraseña incorrectos.'
             });
 
         }
@@ -295,11 +297,12 @@ exports.login = async (req, res) => {
 
         if (!passwordCorrecta) {
 
+            logger.warn(
+                `Contraseña incorrecta durante login: ${correoNormalizado}`
+            );
+
             return res.status(401).json({
-
-                mensaje:
-                    'Correo o contraseña incorrectos.'
-
+                mensaje: 'Correo o contraseña incorrectos.'
             });
 
         }
@@ -338,20 +341,20 @@ exports.login = async (req, res) => {
         // =====================================================
 
         return res.status(200).json({
-
-            mensaje:
-                'Inicio de sesión exitoso.',
-
-            token
-
+            mensaje: 'Inicio de sesión exitoso.',
+            token,
+            usuario: {
+                id: usuario._id,
+                correo: usuario.correo,
+                rol: usuario.rol
+            }
         });
 
 
     } catch (error) {
 
-        console.error(
-            'Error iniciando sesión:',
-            error
+        logger.error(
+            `Error registrando usuario: ${error.message}`
         );
 
 

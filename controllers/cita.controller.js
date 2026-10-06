@@ -1,5 +1,7 @@
 const Cita = require('../models/cita.model');
 const Servicio = require('../models/servicio.model');
+const Cliente = require('../models/cliente.model');
+const Manicurista = require('../models/manicurista.model');
 
 /**
  * Registra una nueva cita.
@@ -7,31 +9,59 @@ const Servicio = require('../models/servicio.model');
 exports.registrar = async (req, res) => {
     try {
         const {
-            clienteId,
-            manicuristaId,
             servicioId,
+            manicuristaId,
             fecha,
             hora
         } = req.body;
 
-        if (!clienteId || !manicuristaId || !servicioId || !fecha || !hora) {
+        // Validar campos enviados desde el frontend
+        if (!servicioId || !manicuristaId || !fecha || !hora) {
             return res.status(400).json({
                 ok: false,
-                mensaje: 'Todos los campos de la cita son obligatorios'
+                mensaje: 'Servicio, manicurista, fecha y hora son obligatorios.'
             });
         }
 
+        // Buscar el cliente asociado al usuario autenticado
+        const cliente = await Cliente.findOne({
+            usuarioId: req.usuario.id
+        });
+
+        if (!cliente) {
+            return res.status(404).json({
+                ok: false,
+                mensaje: 'No se encontró el perfil del cliente.'
+            });
+        }
+
+        // Verificar que el servicio exista
         const servicio = await Servicio.findById(servicioId);
+
         if (!servicio) {
             return res.status(404).json({
                 ok: false,
-                mensaje: 'El servicio seleccionado no existe'
+                mensaje: 'El servicio seleccionado no existe.'
             });
         }
 
+        // Verificar que la manicurista exista y esté activa
+        const manicurista = await Manicurista.findOne({
+            _id: manicuristaId,
+            estado: 'Activa'
+        });
+
+        if (!manicurista) {
+            return res.status(404).json({
+                ok: false,
+                mensaje: 'La manicurista seleccionada no existe o no está activa.'
+            });
+        }
+
+        // Verificar que no exista otra cita en la misma fecha y hora
         const citaExistente = await Cita.findOne({
             manicuristaId,
-            fecha,
+            fecha: new Date(fecha),
             hora,
             estado: { $ne: 'Cancelada' }
         });
@@ -39,59 +69,78 @@ exports.registrar = async (req, res) => {
         if (citaExistente) {
             return res.status(400).json({
                 ok: false,
-                mensaje: 'La manicurista ya tiene una cita asignada en esa fecha y hora'
+                mensaje: 'La manicurista ya tiene una cita asignada en esa fecha y hora.'
             });
         }
 
-        const citaNueva = {
-            clienteId,
-            manicuristaId,
-            servicioId,
-            fecha,
+        // Crear la cita
+        const cita = await Cita.create({
+            clienteId: cliente._id,
+            manicuristaId: manicurista._id,
+            servicioId: servicio._id,
+            fecha: new Date(fecha),
             hora,
             total: servicio.precio
-        };
-
-        const cita = await Cita.create(citaNueva);
+        });
 
         return res.status(201).json({
             ok: true,
-            mensaje: 'Cita registrada exitosamente',
+            mensaje: 'Cita registrada exitosamente.',
             cita
         });
 
     } catch (error) {
         console.error('Error al registrar cita:', error);
+
         return res.status(500).json({
             ok: false,
-            mensaje: 'Error interno del servidor',
-            error: error.message
+            mensaje: 'Error interno del servidor.'
         });
     }
 };
 
+
 /**
- * Consulta todas las citas.
+ * Consulta las citas del cliente autenticado.
  */
 exports.consultar = async (req, res) => {
     try {
-        const citas = await Cita.find()
+        // Buscar el cliente asociado al usuario autenticado
+        const cliente = await Cliente.findOne({
+            usuarioId: req.usuario.id
+        });
+
+        if (!cliente) {
+            return res.status(404).json({
+                ok: false,
+                mensaje: 'No se encontró el perfil del cliente.'
+            });
+        }
+
+        // Buscar únicamente las citas de ese cliente
+        const citas = await Cita.find({
+            clienteId: cliente._id
+        })
             .populate('clienteId')
             .populate('manicuristaId')
-            .populate('servicioId');
+            .populate('servicioId')
+            .sort({ fecha: 1, hora: 1 });
 
         return res.status(200).json({
             ok: true,
             citas
         });
+
     } catch (error) {
+        console.error('Error al consultar citas:', error);
+
         return res.status(500).json({
             ok: false,
-            mensaje: 'Error al consultar citas',
-            error: error.message
+            mensaje: 'Error al consultar citas.'
         });
     }
 };
+
 
 /**
  * Consulta una cita por ID.
@@ -106,7 +155,7 @@ exports.consultarId = async (req, res) => {
         if (!cita) {
             return res.status(404).json({
                 ok: false,
-                mensaje: 'Cita no encontrada'
+                mensaje: 'Cita no encontrada.'
             });
         }
 
@@ -114,89 +163,111 @@ exports.consultarId = async (req, res) => {
             ok: true,
             cita
         });
+
     } catch (error) {
+        console.error('Error al consultar la cita:', error);
+
         return res.status(500).json({
             ok: false,
-            mensaje: 'Error al consultar la cita',
-            error: error.message
+            mensaje: 'Error al consultar la cita.'
         });
     }
 };
+
 
 /**
  * Actualiza una cita existente.
  */
 exports.actualizar = async (req, res) => {
     try {
-        const { clienteId, manicuristaId, servicioId, fecha, hora, estado } = req.body;
+        const {
+            manicuristaId,
+            servicioId,
+            fecha,
+            hora,
+            estado
+        } = req.body;
 
         const servicio = await Servicio.findById(servicioId);
+
         if (!servicio) {
             return res.status(404).json({
                 ok: false,
-                mensaje: 'El servicio seleccionado no existe'
+                mensaje: 'El servicio seleccionado no existe.'
+            });
+        }
+
+        const cita = await Cita.findById(req.params.id);
+
+        if (!cita) {
+            return res.status(404).json({
+                ok: false,
+                mensaje: 'Cita no encontrada.'
             });
         }
 
         const datos = {
-            clienteId,
             manicuristaId,
             servicioId,
-            fecha,
+            fecha: new Date(fecha),
             hora,
             total: servicio.precio,
             estado
         };
 
-        const cita = await Cita.findByIdAndUpdate(req.params.id, datos, {
-            new: true,
-            runValidators: true
-        });
-
-        if (!cita) {
-            return res.status(404).json({
-                ok: false,
-                mensaje: 'Cita no encontrada'
-            });
-        }
+        const citaActualizada = await Cita.findByIdAndUpdate(
+            req.params.id,
+            datos,
+            {
+                new: true,
+                runValidators: true
+            }
+        );
 
         return res.status(200).json({
             ok: true,
-            mensaje: 'Cita actualizada correctamente',
-            cita
+            mensaje: 'Cita actualizada correctamente.',
+            cita: citaActualizada
         });
+
     } catch (error) {
+        console.error('Error al actualizar la cita:', error);
+
         return res.status(500).json({
             ok: false,
-            mensaje: 'Error al actualizar la cita',
-            error: error.message
+            mensaje: 'Error al actualizar la cita.'
         });
     }
 };
+
 
 /**
  * Elimina una cita.
  */
 exports.eliminar = async (req, res) => {
     try {
-        const cita = await Cita.findByIdAndDelete(req.params.id);
+        const cita = await Cita.findById(req.params.id);
 
         if (!cita) {
             return res.status(404).json({
                 ok: false,
-                mensaje: 'Cita no encontrada'
+                mensaje: 'Cita no encontrada.'
             });
         }
 
+        await Cita.findByIdAndDelete(req.params.id);
+
         return res.status(200).json({
             ok: true,
-            mensaje: 'Cita eliminada correctamente'
+            mensaje: 'Cita eliminada correctamente.'
         });
+
     } catch (error) {
+        console.error('Error al eliminar la cita:', error);
+
         return res.status(500).json({
             ok: false,
-            mensaje: 'Error al eliminar la cita',
-            error: error.message
+            mensaje: 'Error al eliminar la cita.'
         });
     }
 };

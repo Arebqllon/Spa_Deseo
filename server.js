@@ -1,19 +1,23 @@
 const app = require('./app');
 const conectarDB = require('./config/db');
+const logger = require('./utils/logger');
 
-/**
- * Inicia la conexión con MongoDB
- * y posteriormente levanta el servidor.
- */
 const iniciarServidor = async () => {
+
+    logger.info('Iniciando servidor de Spa Deseo');
 
     await conectarDB();
 
     const PORT = process.env.PORT || 3000;
 
     app.listen(PORT, () => {
-        console.log(`Servidor ejecutándose en el puerto ${PORT}`);
+
+        logger.info(
+            `Servidor ejecutándose en el puerto ${PORT}`
+        );
+
     });
+
 };
 
 iniciarServidor();

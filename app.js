@@ -50,16 +50,13 @@ app.use(morgan('dev'));
 
 const usuarioRoutes = require('./routes/usuario.routes');
 const citaRoutes = require('./routes/cita.routes');
+const servicioRoutes = require('./routes/servicio.routes');
+const manicuristaRoutes = require('./routes/manicurista.routes');
 
-app.use(
-    '/api/usuarios',
-    usuarioRoutes
-);
-
-app.use(
-    '/api/citas',
-    citaRoutes
-);
+app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/citas', citaRoutes);
+app.use('/api/servicios', servicioRoutes);
+app.use('/api/manicuristas', manicuristaRoutes);
 
 
 // ===============================
