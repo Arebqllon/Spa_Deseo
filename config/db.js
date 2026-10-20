@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const logger = require('../utils/logger'); // Importa el logger desde utils
 
 /**
  * Conecta la aplicación con MongoDB.
